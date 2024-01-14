@@ -1,44 +1,48 @@
-use bytes::BufMut;
+use bytes::{Buf, BufMut};
 use crate::arp::{add_arp_tables, search_arp_tables};
 use crate::ethernet::EthernetHeader;
 use crate::icmp::read_icmp_packet;
-use crate::util::{checksum, to_u16, to_u32};
+use crate::util::{checksum};
 
 pub const IP_PROTOCOL_NUMBER_ICMP: u8 = 1;
 pub const IP_PROTOCOL_NUMBER_TCP: u8  = 6;
 pub const IP_PROTOCOL_NUMBER_UDP: u8  = 17;
 
 pub struct IPv4Header {
-    version: u8,
-    header_length: u8,
-    tos: u8,
-    total_len: u16,
-    identity_num: u16,
-    frag_offset: u16,
-    ttl: u8,
-    protocol: u8,
-    checksum: u16,
-    pub(crate) src_addr: u32,
-    pub(crate) dest_addr: u32
+    version: u8,            // バージョン
+    header_length: u8,      // ヘッダ長
+    tos: u8,                // Type of Service
+    total_len: u16,         // パケット長
+    identity_num: u16,      // パケットの識別番号
+    frag_offset: u16,       // 最初の3bitがフラグで残りの13bitがフラグオフセット
+    ttl: u8,                // Time to Live
+    protocol: u8,           // 上位のプロトコル番号
+    checksum: u16,          // チェックサム
+    pub(crate) src_addr: u32,   // 送信元IPアドレス
+    pub(crate) dst_addr: u32   // 宛先IPアドレス
 }
 
-pub fn read_ipv4_packet(eth_header :EthernetHeader, ipv4_packet: Vec<u8>, ipv4: u32) -> (u32, Vec<u8>) {
+pub fn read_ipv4_packet(eth_header :EthernetHeader, packet: Vec<u8>, ipv4: u32) -> (u32, Vec<u8>) {
+    let mut buf = &packet[..];
 
-    let ipv4_header = IPv4Header{
-        version: ipv4_packet[0] >> 4,
-        header_length: (ipv4_packet[0] >> 4) * 5,
-        tos: ipv4_packet[1],
-        total_len: to_u16(ipv4_packet.get(2..4).unwrap()),
-        identity_num: to_u16(ipv4_packet.get(4..6).unwrap()),
-        frag_offset: to_u16(ipv4_packet.get(6..8).unwrap()),
-        ttl: ipv4_packet[8],
-        protocol: ipv4_packet[9],
-        checksum: to_u16(ipv4_packet.get(10..12).unwrap()),
-        src_addr: to_u32(ipv4_packet.get(12..16).unwrap()),
-        dest_addr: to_u32(ipv4_packet.get(16..20).unwrap())
+    let mut ipv4_header = IPv4Header{
+        version: buf.get_u8(),
+        header_length: 0,
+        tos: buf.get_u8(),
+        total_len: buf.get_u16(),
+        identity_num: buf.get_u16(),
+        frag_offset: buf.get_u16(),
+        ttl: buf.get_u8(),
+        protocol: buf.get_u8(),
+        checksum: buf.get_u16(),
+        src_addr: buf.get_u32(),
+        dst_addr: buf.get_u32()
     };
+    ipv4_header.header_length = (ipv4_header.version >> 4) * 5;
+    ipv4_header.version = ipv4_header.version >> 4;
+
     // 自分宛てのパケットでなければreturn
-    if ipv4 != ipv4_header.dest_addr {
+    if ipv4 != ipv4_header.dst_addr {
         return (0, vec![]);
     }
 
@@ -51,8 +55,8 @@ pub fn read_ipv4_packet(eth_header :EthernetHeader, ipv4_packet: Vec<u8>, ipv4: 
         IP_PROTOCOL_NUMBER_ICMP => {
             println!("receive icmp packet");
             // replyパケットを生成
-            let packet = read_icmp_packet(ipv4_packet[20..].to_owned());
-            return (ipv4_header.src_addr, out_ipv4_packet(ipv4_header.dest_addr, ipv4_header.src_addr, IP_PROTOCOL_NUMBER_ICMP, packet))
+            let packet = read_icmp_packet(buf[..].to_owned());
+            return (ipv4_header.src_addr, out_ipv4_packet(ipv4_header.dst_addr, ipv4_header.src_addr, IP_PROTOCOL_NUMBER_ICMP, packet))
         }
         IP_PROTOCOL_NUMBER_TCP => {
             println!("receive tcp packet")
@@ -80,7 +84,7 @@ pub fn out_ipv4_packet(src_addr: u32, dest_addr: u32, protocol: u8, mut payload:
         protocol,
         checksum: 0,
         src_addr,
-        dest_addr,
+        dst_addr: dest_addr,
     };
     ipv4_header.total_len = (ipv4_header.header_length + payload.len() as u8) as u16;
 
@@ -94,7 +98,7 @@ pub fn out_ipv4_packet(src_addr: u32, dest_addr: u32, protocol: u8, mut payload:
     buf.put_u8(ipv4_header.protocol);
     buf.put_u16(ipv4_header.checksum);
     buf.put_u32(ipv4_header.src_addr);
-    buf.put_u32(ipv4_header.dest_addr);
+    buf.put_u32(ipv4_header.dst_addr);
 
     // checksumを計算してセット
     let checksum = checksum(buf.clone()).to_be_bytes().to_vec();
