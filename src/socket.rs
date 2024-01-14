@@ -40,6 +40,7 @@ pub fn recv_packet(if_name: Box<str>) {
                 });
                 let send_buf = rx.recv().unwrap();
                 if 0 < send_buf.len() {
+                    println!("send buf is {:?}", send_buf);
                     send(sock.as_raw_fd(), &*send_buf, MsgFlags::empty()).unwrap();
                 }
             }
