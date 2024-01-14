@@ -37,9 +37,9 @@ pub fn read_icmp_packet(icmp_packet: Vec<u8>) -> Vec<u8> {
         }
         _ => {
             println!("other icmp message");
+            return vec![];
         }
     }
-    return vec![];
 }
 
 fn icmp_echo_reply(mut header: ICMPHeader, mes: ICMPEchoMessage) -> Vec<u8> {

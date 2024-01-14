@@ -2,6 +2,7 @@ use bytes::{Buf, BufMut};
 use crate::arp::{add_arp_tables, search_arp_tables};
 use crate::ethernet::EthernetHeader;
 use crate::icmp::read_icmp_packet;
+use crate::udp::read_udp_packet;
 use crate::util::{checksum};
 
 pub const IP_PROTOCOL_NUMBER_ICMP: u8 = 1;
@@ -62,10 +63,12 @@ pub fn read_ipv4_packet(eth_header :EthernetHeader, packet: Vec<u8>, ipv4: u32) 
             println!("receive tcp packet")
         }
         IP_PROTOCOL_NUMBER_UDP => {
-            println!("receive udp packet")
+            println!("receive udp packet");
+            read_udp_packet(buf[..].to_owned());
+            return (0, vec![]);
         }
         _ => {
-            eprintln!("not supported ip protocol")
+            eprintln!("not supported ip protocol");
         }
     }
 
