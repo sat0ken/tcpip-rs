@@ -1,12 +1,15 @@
-use std::os::fd::{AsRawFd};
+use crate::ethernet::read_ethernet;
+use crate::util::{get_ipv4addr, get_sockaddr};
+use nix::sys::socket::{
+    bind, recvfrom, send, socket, AddressFamily, LinkAddr, MsgFlags, SockFlag, SockProtocol,
+    SockType,
+};
+use std::os::fd::AsRawFd;
 use std::sync::mpsc::sync_channel;
 use std::thread;
-use nix::sys::socket::{AddressFamily, bind, LinkAddr, MsgFlags, recvfrom, send, socket, SockFlag, SockProtocol, SockType};
-use crate::util::{get_ipv4addr, get_sockaddr};
-use crate::ethernet::read_ethernet;
 
 pub fn recv_packet(if_name: Box<str>) {
-    let mut buf  = [0; 1514];
+    let mut buf = [0; 1514];
     let sock_addr = get_sockaddr(Box::from(if_name.clone())).unwrap();
 
     let mac_addr = sock_addr.as_link_addr().unwrap().addr().unwrap();
@@ -18,12 +21,13 @@ pub fn recv_packet(if_name: Box<str>) {
         eprintln!("get ipv4 addr err");
     }
 
-    let sock =  socket(
+    let sock = socket(
         AddressFamily::Packet,
         SockType::Raw,
         SockFlag::empty(),
         SockProtocol::EthAll,
-    ).expect("create socket failed");
+    )
+    .expect("create socket failed");
 
     bind(sock.as_raw_fd(), &sock_addr).unwrap();
 

@@ -27,13 +27,13 @@ struct TCPDummyHeader {
     src_ip: u32,
     dst_ip: u32,
     protocol: u16,
-    length: u16
+    length: u16,
 }
 
-pub fn read_tcp_packet(tcp_packet: Vec<u8>)  {
+pub fn read_tcp_packet(tcp_packet: Vec<u8>) {
     let mut buf = &tcp_packet[..];
 
-    let mut tcp = TCPHeader{
+    let mut tcp = TCPHeader {
         src_port: buf.get_u16(),
         dst_port: buf.get_u16(),
         seq: buf.get_u32(),
@@ -43,8 +43,7 @@ pub fn read_tcp_packet(tcp_packet: Vec<u8>)  {
         flag: buf.get_u8(),
         window_size: buf.get_u16(),
         checksum: buf.get_u16(),
-        urg_pt: buf.get_u16()
+        urg_pt: buf.get_u16(),
     };
-    tcp.offset = tcp.offset>>2;
-
+    tcp.offset = tcp.offset >> 2;
 }

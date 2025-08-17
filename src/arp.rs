@@ -1,12 +1,12 @@
-use std::sync::Mutex;
-use bytes::{Buf, BufMut};
 use crate::ethernet::ETHERNET_TYPE_IPV4;
-use crate::util::{to_u32};
+use crate::util::to_u32;
+use bytes::{Buf, BufMut};
+use std::sync::Mutex;
 
 #[derive(Debug)]
 pub struct ArpTable {
     mac_addr: [u8; 6],
-    ip_addr: u32
+    ip_addr: u32,
 }
 
 const ARP_HARDWARE_TYPE: u16 = 0x0001;
@@ -33,7 +33,7 @@ pub fn search_arp_tables(ip_addr: u32) -> [u8; 6] {
     for i in 0..arp.len() {
         println!("search_arp_tables {:?}, {:?}", arp[i], ip_addr);
         if arp[i].ip_addr == ip_addr {
-            return arp[i].mac_addr
+            return arp[i].mac_addr;
         }
     }
     return [0, 0, 0, 0, 0, 0];
@@ -41,14 +41,13 @@ pub fn search_arp_tables(ip_addr: u32) -> [u8; 6] {
 
 pub fn add_arp_tables(mac_addr: [u8; 6], ip_addr: u32) {
     let mut arp = ARP_TABLES.lock().unwrap();
-    arp.push(ArpTable{mac_addr, ip_addr});
+    arp.push(ArpTable { mac_addr, ip_addr });
     println!("add arp tables entry is OK")
 }
 
 pub fn read_arp_packet(packet: Vec<u8>, my_mac_addr: [u8; 6], my_ip_addr: u32) -> (u32, Vec<u8>) {
-
     let mut arp = &packet[..];
-    let arp_message = ArpMessage{
+    let arp_message = ArpMessage {
         hardware_type: arp.get_u16(),
         protocol_type: arp.get_u16(),
         hardware_addr_len: arp.get_u8(),
@@ -66,15 +65,19 @@ pub fn read_arp_packet(packet: Vec<u8>, my_mac_addr: [u8; 6], my_ip_addr: u32) -
         add_arp_tables(arp_message.src_mac_addr, arp_message.src_ip_addr)
     }
 
-    if arp_message.operation_type == ARP_OPERATION_TYPE_REQUEST &&
-        arp_message.dst_ip_addr == my_ip_addr {
-        return (arp_message.src_ip_addr, out_arp_reply(arp_message, my_mac_addr, my_ip_addr));
+    if arp_message.operation_type == ARP_OPERATION_TYPE_REQUEST
+        && arp_message.dst_ip_addr == my_ip_addr
+    {
+        return (
+            arp_message.src_ip_addr,
+            out_arp_reply(arp_message, my_mac_addr, my_ip_addr),
+        );
     }
     return (0, vec![]);
 }
 
 fn out_arp_reply(arp_req: ArpMessage, my_mac_addr: [u8; 6], my_ip_addr: u32) -> Vec<u8> {
-    let reply = ArpMessage{
+    let reply = ArpMessage {
         hardware_type: ARP_HARDWARE_TYPE,
         protocol_type: ETHERNET_TYPE_IPV4,
         hardware_addr_len: 6,

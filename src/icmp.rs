@@ -4,34 +4,34 @@ const ICMP_MESSAGE_TYPE_ECHO_REPLY: u8 = 0;
 const ICMP_MESSAGE_TYPE_ECHO_REQUEST: u8 = 8;
 
 struct ICMPHeader {
-    icmp_type: u8,  // メッセージタイプ
+    icmp_type: u8, // メッセージタイプ
     icmp_code: u8,
-    checksum: u16   // チェックサム
+    checksum: u16, // チェックサム
 }
 
 struct ICMPEchoMessage<'a> {
-    identity_number: u16,   // ID
-    sequence_number: u16,   // シーケンス番号
-    data: &'a [u8],         // データ
+    identity_number: u16, // ID
+    sequence_number: u16, // シーケンス番号
+    data: &'a [u8],       // データ
 }
 
 pub fn read_icmp_packet(icmp_packet: Vec<u8>) -> Vec<u8> {
     let mut packet = &icmp_packet[..];
 
-    let icmp_header = ICMPHeader{
+    let icmp_header = ICMPHeader {
         icmp_type: packet.get_u8(),
         icmp_code: packet.get_u8(),
-        checksum:  packet.get_u16(),
+        checksum: packet.get_u16(),
     };
 
     match icmp_header.icmp_type {
         // echo要求だけ応答
         ICMP_MESSAGE_TYPE_ECHO_REQUEST => {
             println!("icmp echo request");
-            let echo = ICMPEchoMessage{
+            let echo = ICMPEchoMessage {
                 identity_number: packet.get_u16(),
                 sequence_number: packet.get_u16(),
-                data: packet.get(0..).unwrap()
+                data: packet.get(0..).unwrap(),
             };
             return icmp_echo_reply(icmp_header, echo);
         }

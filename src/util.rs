@@ -1,6 +1,6 @@
-use nix::{ifaddrs::getifaddrs};
-use nix::sys::socket::{AddressFamily, SockaddrLike, SockaddrStorage};
 use crate::util::UtilsError::*;
+use nix::ifaddrs::getifaddrs;
+use nix::sys::socket::{AddressFamily, SockaddrLike, SockaddrStorage};
 
 #[derive(Debug)]
 pub enum UtilsError {
@@ -8,7 +8,6 @@ pub enum UtilsError {
 }
 
 pub fn checksum(packet: Vec<u8>) -> u16 {
-
     let mut sum: u32 = 0;
     for i in 0..packet.len() {
         if i % 2 == 0 {
@@ -21,7 +20,6 @@ pub fn checksum(packet: Vec<u8>) -> u16 {
 }
 
 pub fn get_sockaddr(if_name: Box<str>) -> Result<SockaddrStorage, UtilsError> {
-
     let interfaces = getifaddrs().unwrap();
     for interface in interfaces {
         if if_name == Box::from(interface.interface_name) {
@@ -37,7 +35,6 @@ pub fn get_sockaddr(if_name: Box<str>) -> Result<SockaddrStorage, UtilsError> {
 }
 
 pub fn get_ipv4addr(if_name: Box<str>) -> u32 {
-
     let interfaces = getifaddrs().unwrap();
     for interface in interfaces {
         if if_name == Box::from(interface.interface_name) {
