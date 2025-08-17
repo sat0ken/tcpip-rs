@@ -1,11 +1,13 @@
 use crate::arp::{read_arp_packet, search_arp_tables};
 use crate::ipv4::read_ipv4_packet;
+use crate::ipv6::read_ipv6_packet;
 use crate::util::to_u16;
 use bytes::BufMut;
 use std::sync::mpsc::SyncSender;
 
 pub const ETHERNET_TYPE_IPV4: u16 = 0x0800;
 const ETHERNET_TYPE_ARP: u16 = 0x0806;
+const ETHERNET_TYPE_IPV6: u16 = 0x86DD;
 
 // const ETHERNET_BRD_ADDR: [u8; 6] = [0xff, 0xff, 0xff, 0xff, 0xff, 0xff];
 
@@ -48,6 +50,10 @@ pub fn read_ethernet(
             if dest_ip_addr != 0 {
                 out_ethernet(tx, my_mac_addr, dest_ip_addr, packet, ETHERNET_TYPE_ARP);
             }
+        }
+        ETHERNET_TYPE_IPV6 => {
+            println!("receive ipv6 packet");
+            read_ipv6_packet(eth_header, packet[14..].to_owned())
         }
         _ => {}
     }
