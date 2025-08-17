@@ -33,11 +33,11 @@ pub fn read_icmp_packet(icmp_packet: Vec<u8>) -> Vec<u8> {
                 sequence_number: packet.get_u16(),
                 data: packet.get(0..).unwrap(),
             };
-            return icmp_echo_reply(icmp_header, echo);
+            icmp_echo_reply(icmp_header, echo)
         }
         _ => {
             println!("other icmp message");
-            return vec![];
+            vec![]
         }
     }
 }
@@ -58,5 +58,5 @@ fn icmp_echo_reply(mut header: ICMPHeader, mes: ICMPEchoMessage) -> Vec<u8> {
     buf.put_u16(mes.sequence_number);
     buf.append(&mut mes.data.to_vec());
 
-    return buf;
+    buf
 }

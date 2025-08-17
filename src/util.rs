@@ -16,7 +16,7 @@ pub fn checksum(packet: Vec<u8>) -> u16 {
     }
 
     sum = (sum & 0xffff) + (sum >> 16);
-    return (sum ^ 0xffff) as u16;
+    (sum ^ 0xffff) as u16
 }
 
 pub fn get_sockaddr(if_name: Box<str>) -> Result<SockaddrStorage, UtilsError> {
@@ -46,15 +46,15 @@ pub fn get_ipv4addr(if_name: Box<str>) -> u32 {
             }
         }
     }
-    return 0;
+    0
 }
 
 pub fn to_u32(packet: &[u8]) -> u32 {
-    return u32::from_be_bytes(packet[0..4].try_into().unwrap());
+    u32::from_be_bytes(packet[0..4].try_into().unwrap())
 }
 
 pub fn to_u16(packet: &[u8]) -> u16 {
-    return u16::from_be_bytes(packet[0..2].try_into().unwrap());
+    u16::from_be_bytes(packet[0..2].try_into().unwrap())
 }
 
 pub fn dump_packet(packet: Vec<u8>) {

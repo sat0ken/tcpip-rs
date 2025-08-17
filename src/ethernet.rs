@@ -61,7 +61,7 @@ pub fn out_ethernet(
     ether_type: u16,
 ) {
     let dest_mac_addr = search_arp_tables(dest_ip_addr);
-    println!("out_ethernet dest_mac_addr {:?}", dest_mac_addr);
+    println!("out_ethernet dest_mac_addr {dest_mac_addr:?}");
     if dest_mac_addr == [0, 0, 0, 0, 0, 0] {
         // Todo: ARPリクエストを出す
         eprintln!("No Arp Table");

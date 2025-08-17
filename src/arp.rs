@@ -36,7 +36,7 @@ pub fn search_arp_tables(ip_addr: u32) -> [u8; 6] {
             return arp[i].mac_addr;
         }
     }
-    return [0, 0, 0, 0, 0, 0];
+    [0, 0, 0, 0, 0, 0]
 }
 
 pub fn add_arp_tables(mac_addr: [u8; 6], ip_addr: u32) {
@@ -73,7 +73,7 @@ pub fn read_arp_packet(packet: Vec<u8>, my_mac_addr: [u8; 6], my_ip_addr: u32) -
             out_arp_reply(arp_message, my_mac_addr, my_ip_addr),
         );
     }
-    return (0, vec![]);
+    (0, vec![])
 }
 
 fn out_arp_reply(arp_req: ArpMessage, my_mac_addr: [u8; 6], my_ip_addr: u32) -> Vec<u8> {
@@ -99,5 +99,5 @@ fn out_arp_reply(arp_req: ArpMessage, my_mac_addr: [u8; 6], my_ip_addr: u32) -> 
     buf.append(&mut reply.dst_mac_addr.to_vec());
     buf.put_u32(reply.dst_ip_addr);
 
-    return buf;
+    buf
 }

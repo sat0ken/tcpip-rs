@@ -80,7 +80,7 @@ pub fn read_ipv4_packet(eth_header: EthernetHeader, packet: Vec<u8>, ipv4: u32) 
         }
     }
 
-    return (0, vec![]);
+    (0, vec![])
 }
 
 pub fn out_ipv4_packet(
@@ -123,5 +123,5 @@ pub fn out_ipv4_packet(
     // ヘッダの後ろにpayloadを追加
     buf.append(&mut payload);
 
-    return buf;
+    buf
 }
