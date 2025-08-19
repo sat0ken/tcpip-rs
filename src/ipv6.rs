@@ -1,8 +1,10 @@
 use crate::ethernet::EthernetHeader;
+use crate::icmpv6::read_icmpv6_packet;
 use bytes::Buf;
 
 const IP_PROTOCOL_NUMBER_ICMPv6: u8 = 58;
 
+#[derive(Debug)]
 pub struct IPv6Header {
     version: u8,
     traffic_class: u8,
@@ -37,6 +39,7 @@ pub fn read_ipv6_packet(eth_header: EthernetHeader, packet: Vec<u8>) {
     match ipv6_header.next_header {
         IP_PROTOCOL_NUMBER_ICMPV6 => {
             println!("receive icmpv6 packet");
+            read_icmpv6_packet(buf.to_owned());
         }
         _ => {
             eprintln!("not supported ip protocol");
