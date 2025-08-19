@@ -21,12 +21,13 @@ ip link set host1-host2 netns host1
 ip link set host2-host1 netns host2
 
 # host1のリンクの設定
-ip netns exec host1 ip addr add 192.168.1.2/24 dev host1-host2
+ip netns exec host1 ip addr add 2001:db8:0:1::2/64 dev host1-host2
 ip netns exec host1 ip link set host1-host2 up
 ip netns exec host1 ethtool -K host1-host2 rx off tx off
+ip netns exec host1 ip route add default via 2001:db8:0:1::1
 
 # host2のリンクの設定
-ip netns exec host2 ip addr add 192.168.1.3/24 dev host2-host1
+ip netns exec host2 ip addr add 2001:db8:0:1::1/64 dev host2-host1
 ip netns exec host2 ip link set host2-host1 up
 ip netns exec host2 ethtool -K host2-host1 rx off tx off
-ip netns exec host2 sysctl net.ipv4.icmp_echo_ignore_all=1
+# ip netns exec router1 sysctl -w net.ipv6.icmp.echo_ignore_all=1
