@@ -18,11 +18,12 @@ pub struct IPv6Header {
 
 pub fn read_ipv6_packet(eth_header: EthernetHeader, packet: Vec<u8>) {
     let mut buf = &packet[..];
+    let first_32_bits = buf.get_u32();
 
     let mut ipv6_header = IPv6Header {
-        version: buf.get_u8(),
-        traffic_class: buf.get_u8(),
-        flow_label: buf.get_u32(),
+        version: (first_32_bits >> 28) as u8,
+        traffic_class: ((first_32_bits >> 20) & 0xff) as u8,
+        flow_label: first_32_bits & 0x000fffff,
         header_length: buf.get_u16(),
         next_header: buf.get_u8(),
         hop_limit: buf.get_u8(),
@@ -35,11 +36,10 @@ pub fn read_ipv6_packet(eth_header: EthernetHeader, packet: Vec<u8>) {
 
     // ARPテーブルを検索して存在していなければ追加
     // TODO: 処理を追加
-
     match ipv6_header.next_header {
         IP_PROTOCOL_NUMBER_ICMPV6 => {
             println!("receive icmpv6 packet");
-            read_icmpv6_packet(buf.to_owned());
+            read_icmpv6_packet(buf[..].to_owned());
         }
         _ => {
             eprintln!("not supported ip protocol");
