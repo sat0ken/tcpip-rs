@@ -1,5 +1,7 @@
 use bytes::Buf;
 
+use crate::util::dump_packet;
+
 const ICMPV6_TYPE_ECHO_REQUEST: u8 = 128;
 const ICMPV6_TYPE_ECHO_REPLY: u8 = 129;
 

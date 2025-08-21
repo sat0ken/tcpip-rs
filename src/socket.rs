@@ -1,5 +1,5 @@
 use crate::ethernet::read_ethernet;
-use crate::util::{get_ipv4addr, get_sockaddr};
+use crate::util::{get_ipaddr, get_sockaddr};
 use nix::sys::socket::{
     bind, recvfrom, send, socket, AddressFamily, LinkAddr, MsgFlags, SockFlag, SockProtocol,
     SockType,
@@ -15,10 +15,9 @@ pub fn recv_packet(if_name: Box<str>) {
     let mac_addr = sock_addr.as_link_addr().unwrap().addr().unwrap();
 
     // Todo: sock_addrとIPv4アドレスを同時に取得したい
-    let ipv4_addr = get_ipv4addr(if_name);
-    // IPv4アドレスが0だったらエラー
-    if ipv4_addr == 0 {
-        eprintln!("get ipv4 addr err");
+    let ip_addr = get_ipaddr(if_name);
+    if ip_addr.is_none() {
+        eprintln!("NO ip addr err");
     }
 
     let sock = socket(
@@ -40,7 +39,7 @@ pub fn recv_packet(if_name: Box<str>) {
         match recvfrom::<LinkAddr>(sock.as_raw_fd(), &mut buf) {
             Ok((size, _)) => {
                 thread::spawn(move || {
-                    read_ethernet(buf[0..size].to_owned(), tx, mac_addr, ipv4_addr);
+                    read_ethernet(buf[0..size].to_owned(), tx, mac_addr, ip_addr);
                 });
                 let send_buf = rx.recv().unwrap();
                 if 0 < send_buf.len() {

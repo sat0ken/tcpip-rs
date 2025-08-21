@@ -1,6 +1,7 @@
 use crate::util::UtilsError::*;
 use nix::ifaddrs::getifaddrs;
 use nix::sys::socket::{AddressFamily, SockaddrLike, SockaddrStorage};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 #[derive(Debug)]
 pub enum UtilsError {
@@ -34,19 +35,42 @@ pub fn get_sockaddr(if_name: Box<str>) -> Result<SockaddrStorage, UtilsError> {
     Err(NoNetworkInterface)
 }
 
-pub fn get_ipv4addr(if_name: Box<str>) -> u32 {
+pub fn get_ipaddr(if_name: Box<str>) -> Option<IpAddr> {
     let interfaces = getifaddrs().unwrap();
+    let mut ipv4_addr: Option<Ipv4Addr> = None;
+    let mut ipv6_addr: Option<Ipv6Addr> = None;
+
     for interface in interfaces {
         if if_name == Box::from(interface.interface_name) {
             if let Some(sock_storage) = interface.address {
-                if AddressFamily::Inet == sock_storage.family().unwrap() {
-                    let ipaddr = u32::from(sock_storage.as_sockaddr_in().unwrap().ip());
-                    return ipaddr;
+                match sock_storage.family() {
+                    Some(AddressFamily::Inet) => {
+                        // as_sockaddr_in() returns Option<T>, so we handle it directly
+                        if let Some(ip_in) = sock_storage.as_sockaddr_in() {
+                            ipv4_addr = Some(Ipv4Addr::from(ip_in.ip()));
+                        }
+                    }
+                    Some(AddressFamily::Inet6) => {
+                        // as_sockaddr_in6() returns Option<T>, we handle it here
+                        if let Some(ip_in6) = sock_storage.as_sockaddr_in6() {
+                            // Exclude IPv6 link-local addresses
+                            if !ip_in6.ip().is_unicast_link_local() {
+                                ipv6_addr = Some(ip_in6.ip());
+                            }
+                        }
+                    }
+                    _ => continue,
                 }
             }
         }
     }
-    0
+    if let Some(ip) = ipv4_addr {
+        return Some(IpAddr::V4(ip));
+    }
+    if let Some(ip) = ipv6_addr {
+        return Some(IpAddr::V6(ip));
+    }
+    None
 }
 
 pub fn to_u32(packet: &[u8]) -> u32 {
