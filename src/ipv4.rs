@@ -85,7 +85,7 @@ pub fn read_ipv4_packet(eth_header: EthernetHeader, packet: Vec<u8>, ipv4: u32) 
 
 pub fn out_ipv4_packet(
     src_addr: u32,
-    dest_addr: u32,
+    dst_addr: u32,
     protocol: u8,
     mut payload: Vec<u8>,
 ) -> Vec<u8> {
@@ -100,7 +100,7 @@ pub fn out_ipv4_packet(
         protocol,
         checksum: 0,
         src_addr,
-        dst_addr: dest_addr,
+        dst_addr,
     };
     ipv4_header.total_len = (ipv4_header.header_length + payload.len() as u8) as u16;
 
@@ -117,7 +117,7 @@ pub fn out_ipv4_packet(
     buf.put_u32(ipv4_header.dst_addr);
 
     // checksumを計算してセット
-    let checksum = checksum(buf.clone()).to_be_bytes().to_vec();
+    let checksum = checksum(buf.as_ref()).to_be_bytes().to_vec();
     buf[10] = checksum[0];
     buf[11] = checksum[1];
     // ヘッダの後ろにpayloadを追加
