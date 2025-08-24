@@ -8,7 +8,7 @@ pub enum UtilsError {
     NoNetworkInterface,
 }
 
-pub fn checksum(packet: Vec<u8>) -> u16 {
+pub fn checksum(packet: &Vec<u8>) -> u16 {
     let mut sum: u32 = 0;
     for i in 0..packet.len() {
         if i % 2 == 0 {
@@ -81,7 +81,7 @@ pub fn to_u16(packet: &[u8]) -> u16 {
     u16::from_be_bytes(packet[0..2].try_into().unwrap())
 }
 
-pub fn dump_packet(packet: Vec<u8>) {
+pub fn dump_packet(packet: &Vec<u8>) {
     for i in 0..packet.len() {
         print!("{:02x}", packet[i]);
     }
