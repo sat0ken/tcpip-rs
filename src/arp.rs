@@ -9,6 +9,12 @@ pub struct ArpTable {
     ip_addr: u32,
 }
 
+#[derive(Debug)]
+pub struct ArpTableV6 {
+    mac_addr: [u8; 6],
+    ip_addr: u128,
+}
+
 const ARP_HARDWARE_TYPE: u16 = 0x0001;
 const ARP_OPERATION_TYPE_REQUEST: u16 = 0x0001;
 const ARP_OPERATION_TYPE_REPLY: u16 = 0x0002;
@@ -27,6 +33,7 @@ struct ArpMessage {
 }
 
 static ARP_TABLES: Mutex<Vec<ArpTable>> = Mutex::new(Vec::new());
+static ARP_TABLES_V6: Mutex<Vec<ArpTableV6>> = Mutex::new(Vec::new());
 
 pub fn search_arp_tables(ip_addr: u32) -> [u8; 6] {
     let arp = ARP_TABLES.lock().unwrap();
@@ -43,6 +50,23 @@ pub fn add_arp_tables(mac_addr: [u8; 6], ip_addr: u32) {
     let mut arp = ARP_TABLES.lock().unwrap();
     arp.push(ArpTable { mac_addr, ip_addr });
     println!("add arp tables entry is OK")
+}
+
+pub fn search_arp_tables_v6(ip_addr: u128) -> [u8; 6] {
+    let arp = ARP_TABLES_V6.lock().unwrap();
+    for i in 0..arp.len() {
+        println!("search_arp_tables v6 {:?}, {:?}", arp[i], ip_addr);
+        if arp[i].ip_addr == ip_addr {
+            return arp[i].mac_addr;
+        }
+    }
+    [0, 0, 0, 0, 0, 0]
+}
+
+pub fn add_arp_tables_v6(mac_addr: [u8; 6], ip_addr: u128) {
+    let mut arp = ARP_TABLES_V6.lock().unwrap();
+    arp.push(ArpTableV6 { mac_addr, ip_addr });
+    println!("add arp tables v6 entry is OK")
 }
 
 pub fn read_arp_packet(packet: Vec<u8>, my_mac_addr: [u8; 6], my_ip_addr: u32) -> (u32, Vec<u8>) {
