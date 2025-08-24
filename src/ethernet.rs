@@ -1,4 +1,4 @@
-use crate::arp::{read_arp_packet, search_arp_tables};
+use crate::arp::{read_arp_packet, search_arp_tables, search_arp_tables_v6};
 use crate::ipv4::read_ipv4_packet;
 use crate::ipv6::read_ipv6_packet;
 use crate::util::to_u16;
@@ -54,7 +54,9 @@ pub fn read_ethernet(
             let (dest_ip_addr, packet) =
                 read_ipv4_packet(eth_header, packet[14..].to_owned(), ipv4_addr);
             if dest_ip_addr != 0 {
-                out_ethernet(tx, mac, dest_ip_addr, packet, ETHERNET_TYPE_IPV4);
+                let dest_mac_addr = search_arp_tables(dest_ip_addr);
+                println!("out_ethernet dest_mac_addr {dest_mac_addr:?}");
+                out_ethernet(tx, mac, dest_mac_addr, packet, ETHERNET_TYPE_IPV4);
             }
         }
         ETHERNET_TYPE_ARP => {
@@ -62,12 +64,20 @@ pub fn read_ethernet(
             let (dest_ip_addr, packet) =
                 read_arp_packet(packet[14..].to_owned(), my_mac_addr, ipv4_addr);
             if dest_ip_addr != 0 {
-                out_ethernet(tx, my_mac_addr, dest_ip_addr, packet, ETHERNET_TYPE_ARP);
+                let dest_mac_addr = search_arp_tables(dest_ip_addr);
+                println!("out_ethernet dest_mac_addr {dest_mac_addr:?}");
+                out_ethernet(tx, my_mac_addr, dest_mac_addr, packet, ETHERNET_TYPE_ARP);
             }
         }
         ETHERNET_TYPE_IPV6 => {
             println!("receive ipv6 packet");
-            read_ipv6_packet(eth_header, packet[14..].to_owned())
+            let (dest_ipv6_addr, packet) =
+                read_ipv6_packet(eth_header, packet[14..].to_owned(), ipv6_addr);
+            let dest_mac_addr = search_arp_tables_v6(dest_ipv6_addr);
+            println!("out_ethernet dest_mac_addr {dest_mac_addr:?}");
+            if dest_ipv6_addr != 0 {
+                out_ethernet(tx, my_mac_addr, dest_mac_addr, packet, ETHERNET_TYPE_IPV6);
+            };
         }
         _ => {}
     }
@@ -76,17 +86,10 @@ pub fn read_ethernet(
 pub fn out_ethernet(
     tx: SyncSender<Vec<u8>>,
     src_mac_addr: [u8; 6],
-    dest_ip_addr: u32,
+    dest_mac_addr: [u8; 6],
     packet: Vec<u8>,
     ether_type: u16,
 ) {
-    let dest_mac_addr = search_arp_tables(dest_ip_addr);
-    println!("out_ethernet dest_mac_addr {dest_mac_addr:?}");
-    if dest_mac_addr == [0, 0, 0, 0, 0, 0] {
-        // Todo: ARPリクエストを出す
-        eprintln!("No Arp Table");
-        return;
-    }
     let mut buf = Vec::new();
     // Ethernetヘッダを生成
     buf.append(&mut dest_mac_addr.to_vec());
