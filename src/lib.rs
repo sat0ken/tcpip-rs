@@ -8,3 +8,4 @@ pub mod socket;
 pub mod tcp;
 mod udp;
 pub mod util;
+mod dns;
