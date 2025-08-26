@@ -1,3 +1,4 @@
+use crate::dns::read_dns_packet;
 use bytes::Buf;
 
 #[derive(Debug)]
@@ -22,4 +23,13 @@ pub fn read_udp_packet(packet: Vec<u8>) {
         udp,
         String::from_utf8(Vec::from(buf)).unwrap()
     );
+    match udp.dst_port {
+        53 => {
+            // DNSレスポンスパケットを生成
+            let dns_response = read_dns_packet(packet);
+        }
+        _ => {}
+    }
 }
+
+pub fn out_udp_packet(udpheader: UDPHeader, packet: Vec<u8>) {}

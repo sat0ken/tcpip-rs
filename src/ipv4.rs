@@ -73,7 +73,15 @@ pub fn read_ipv4_packet(eth_header: EthernetHeader, packet: Vec<u8>, ipv4: u32) 
         IP_PROTOCOL_NUMBER_UDP => {
             println!("receive udp packet");
             read_udp_packet(buf[..].to_owned());
-            return (0, vec![]);
+            return (
+                ipv4_header.src_addr,
+                out_ipv4_packet(
+                    ipv4_header.dst_addr,
+                    ipv4_header.src_addr,
+                    IP_PROTOCOL_NUMBER_UDP,
+                    packet,
+                ),
+            );
         }
         _ => {
             eprintln!("not supported ip protocol");
