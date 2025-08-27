@@ -72,7 +72,7 @@ pub fn read_ipv4_packet(eth_header: EthernetHeader, packet: Vec<u8>, ipv4: u32) 
         }
         IP_PROTOCOL_NUMBER_UDP => {
             println!("receive udp packet");
-            read_udp_packet(buf[..].to_owned());
+            let packet = read_udp_packet(&ipv4_header, buf[..].to_owned());
             return (
                 ipv4_header.src_addr,
                 out_ipv4_packet(

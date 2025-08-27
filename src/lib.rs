@@ -1,4 +1,5 @@
 mod arp;
+mod dns;
 mod ethernet;
 mod icmp;
 mod icmpv6;
@@ -8,4 +9,3 @@ pub mod socket;
 pub mod tcp;
 mod udp;
 pub mod util;
-mod dns;

@@ -57,7 +57,7 @@ struct Answer {
     rd_data: Vec<u8>,
 }
 
-pub fn read_dns_packet(dns_packet: Vec<u8>) {
+pub fn read_dns_packet(dns_packet: Vec<u8>) -> Vec<u8> {
     let mut packet = &dns_packet[..];
     let id = packet.get_u16();
     let qr = packet.get_u8();
@@ -91,8 +91,9 @@ pub fn read_dns_packet(dns_packet: Vec<u8>) {
             record_type: u16::from_be_bytes([packet[domain_length - 4], packet[domain_length - 3]]),
             class: u16::from_be_bytes([packet[domain_length - 2], packet[domain_length - 1]]),
         };
-        dns_response(dns_header.id, question);
+        return dns_response(dns_header.id, question);
     }
+    vec![]
 }
 
 fn dns_response(id: u16, question: Question) -> Vec<u8> {
